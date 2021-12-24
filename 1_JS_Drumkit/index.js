@@ -7,7 +7,8 @@ function clicked(num){
     audio.currentTime =0;//rewind to the start
     audio.play();
     key.classList.add('playing');
-    const tout = setTimeout(removeTransition().call(key), 70);
+    const tout = setTimeout(highlight, 70);
+
 }
 function removeTransition()
 {
