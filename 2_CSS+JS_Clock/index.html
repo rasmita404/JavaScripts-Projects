@@ -4,10 +4,18 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Clock</title>
 </head>
 <body>
-    
+  
+    <div>
+        <form class="search-form">Search
+            <input type="text" class="search" placeholder="Enter Country Name">
+            <ul class="suggestions">
+            </ul>
+          </form>
+    </div>
+    <div class="container">
     <div class="clock">
         <div class="clock-face">
             <div class="hand hour-hand"></div>
@@ -15,11 +23,11 @@
             <div class="hand second-hand"></div>
         </div>
     </div>
-
+    </div>
+  
     <style>
         html {
-            background: url(./background.jpg);
-            background-size: cover;
+            background: #b377b0;
             font-size: 10px;
             font-family: Arial, Helvetica, sans-serif;
             text-align: center;
@@ -30,7 +38,13 @@
             display: flex;
             flex: auto;
             min-height: 100vh;
-            align-items: center;
+            
+        }
+
+        .container {
+          display: flex;
+          flex: auto;
+          align-items: center;
         }
 
         .clock {
@@ -49,6 +63,7 @@
             0 0 10px rgba(0,0,0,0.2);
             background: url(./clk.jpg);
             background-size: cover;
+            display: block;
         }
         .clock-face {
 
@@ -75,15 +90,114 @@
         .second-hand {
             height: 2px;
         }
+
+        input {
+    width: 100%;
+    padding: 10px;
+  }
+  
+  
+  
+  .suggestions {
+    margin: 0;
+    padding: 0;
+    position: relative;
+    /*perspective: 20px;*/
+  }
+  
+  .suggestions li {
+    background: white;
+    list-style: none;
+    border-bottom: 1px solid #D8D8D8;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.14);
+    margin: 0;
+    padding: 20px;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+    text-transform: capitalize;
+  }
+  
+  .suggestions li:nth-child(even) {
+    transform: perspective(100px) rotateX(3deg) translateY(2px) scale(1.001);
+    background: linear-gradient(to bottom,  #ffffff 0%,#EFEFEF 100%);
+  }
+  
+  .suggestions li:nth-child(odd) {
+    transform: perspective(100px) rotateX(-3deg) translateY(3px);
+    background: linear-gradient(to top,  #ffffff 0%,#EFEFEF 100%);
+  }
+  
+
+  .hl {
+    background: #ffc600;
+  }
     </style>
 
     <script>
+      //Type ahead search bar:-
+      const endpoint ="https://gist.githubusercontent.com/erdem/8c7d26765831d0f9a8c62f02782ae00d/raw/248037cd701af0a4957cce340dabb0fd04e38f4c/countries.json";
+        const countries = [];
+        fetch(endpoint)
+        .then(blob => blob.json())
+        .then(data => countries.push(...data));
+
+        function findMatches(wordToMatch, countries) {
+            return countries.filter(place => {
+            // here we need to figure out if the country name matches what was searched
+        const regex = new RegExp(wordToMatch, 'gi');//gi= global ,insensitively(upper or lower)
+        return place.name.match(regex);
+        });
+        }
+
+        function displayMatches() {
+            //console.log(this.value);
+            const matchArray = findMatches(this.value, countries);
+            const html = matchArray.map(place => {
+                const regex = new RegExp(this.value, 'gi');
+                const countryName = place.name.replace(regex, `<span class="hl">${this.value}</span>`);
+                return `
+                <li class="click">
+                <span class="name">${countryName}</span>
+                <span class="timezone">${place.timezones[0]}</span>
+                </li>
+                `;
+            }).join('');
+            suggestions.innerHTML = html;
+        }
+        var tz;
+        function autocomplete() {
+          const list = document.getElementsByTagName('li');
+          tz = list[0].innerText.split("\n")[1];
+          console.log(tz, typeof(tz));
+          setInterval(setDate, 1000);
+        }
+
+        const searchInput = document.querySelector('.search');
+        const suggestions = document.querySelector('.suggestions');
+
+        searchInput.addEventListener('change', displayMatches);
+        searchInput.addEventListener('keyup', displayMatches);
+        searchInput.addEventListener('click', autocomplete);
+        searchInput.addEventListener('keypress', function(e) {
+          
+          var key = e.which || e.keyCode || 0;
+          if (key === 13) {
+            e.preventDefault();
+            autocomplete();
+          }
+        });
+
+        //clock:-
         const secondHand = document.querySelector('.second-hand');
         const minHand = document.querySelector('.min-hand');
         const hourHand = document.querySelector('.hour-hand');
+       
         function setDate(){
             
-            const now = new Date();
+            var now = new Date(new Date().toLocaleString("en-US", {timeZone: tz}));
+            
+            //console.log(now);
             const seconds = now.getSeconds();
             if(seconds == 60)
             {
@@ -107,7 +221,7 @@
             const hrsDegrees = ((hours/12)*360)+90;
             hourHand.style.transform = `rotate(${hrsDegrees}deg)`;
         }
-        setInterval(setDate, 1000);
+        
     </script>
 </body>
 </html>
